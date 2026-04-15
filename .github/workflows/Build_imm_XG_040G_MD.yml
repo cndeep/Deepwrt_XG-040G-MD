@@ -227,8 +227,10 @@ jobs:
         设备: XG-040G-MD
         时间: $(date +"%Y-%m-%d %H:%M")
         内核版本: 6.12.X
+        LAN地址: 192.168.6.1
         源码仓库: $REPO_URL
         分支: $REPO_BRANCH
+        插件: $(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ./firmware/*.manifest | awk -F":" '{print $NF}')
         EOF
         echo "status=success" >> $GITHUB_OUTPUT
 
