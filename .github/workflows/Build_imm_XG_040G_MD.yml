@@ -230,8 +230,9 @@ jobs:
         LAN地址: 192.168.6.1
         源码仓库: $REPO_URL
         分支: $REPO_BRANCH
-        插件: $(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ./firmware/*.manifest | awk -F":" '{print $NF}')
+        插件: 
         EOF
+        echo "$(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ${{ env.FIRMWARE }}/*.manifest | awk -F":" '{print $NF}')"  >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Generate file list
