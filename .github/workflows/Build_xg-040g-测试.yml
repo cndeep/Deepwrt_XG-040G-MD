@@ -253,7 +253,9 @@ jobs:
           源码仓库: ${{ env.REPO_URL }}
           分支/Tag: ${{ env.BUILD_REF }}
           使用补丁: ${{ env.SELECTED_PATCH }}
+          插件: 
           EOF
+          echo "$(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ${{ env.FIRMWARE }}/*.manifest | awk -F":" '{print $NF}')"  >> release.txt
 
       - name: Publish GitHub Release
         uses: ncipollo/release-action@v1
