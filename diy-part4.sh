@@ -15,10 +15,12 @@ if [ ! -d "package/luci-app-airoha-npu" ]; then
     git clone https://github.com/rchen14b/luci-app-airoha-npu package/luci-app-airoha-npu
 fi
 
+# gecoosac and QModem
+git clone --depth=1 https://github.com/laipeng668/luci-app-gecoosac package/luci-app-gecoosac
+git clone --depth=1 https://github.com/FUjr/QModem package/QModem
+
 # Modify default IP
 sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generate
-
-
 
 # Modify version
 sed -i 's/ImmortalWrt/DeepWrt/g' package/base-files/image-config.in
