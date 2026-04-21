@@ -26,3 +26,7 @@ sed -i 's/192.168.1.1/192.168.6.1/g' package/base-files/files/bin/config_generat
 sed -i 's/ImmortalWrt/DeepWrt/g' package/base-files/image-config.in
 sed -i 's/ImmortalWrt/DeepWrt/g' include/version.mk
 sed -i 's/ImmortalWrt/DeepWrt/g' package/base-files/files/bin/config_generate
+
+# test for luci-app-airoha-npu
+sed -i '/config BUSYBOX_DEFAULT_DEVMEM/,/default n/ s/default n/default y/' package/utils/busybox/config/default
+echo "CONFIG_DEVMEM=y" >> target/linux/airoha/an7581/config-6.12
