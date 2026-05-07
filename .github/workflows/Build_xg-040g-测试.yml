@@ -74,7 +74,6 @@ jobs:
          fi
            echo "REPO_BRANCH=$REPO_REF" >> $GITHUB_ENV
 
-
       - name: Initialization environment
         id: init
         env:
@@ -82,7 +81,7 @@ jobs:
         run: |
           sudo -E apt-get -y update
           sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/xuxin1955/depend_ubuntu2204_openwrt/refs/heads/main/depend_ubuntu2204_openwrt)
-          echo "status=success" >> ${GITHUB_OUTPUT}
+          echo "status=success" >> $GITHUB_OUTPUT
           
       - name: mkbootimg build
         run: |
@@ -141,22 +140,24 @@ jobs:
 
 
 
-      - name: Apply XG-040G-MD Patch Files
+      - name: Apply Patch
         working-directory: ./openwrt
         run: |
-         SELECTED_PATCH="${{ github.event.inputs.patch_type }}"
-         echo "SELECTED_PATCH=$SELECTED_PATCH" >> $GITHUB_ENV
-    
-         if [ -d "../$SELECTED_PATCH" ] && [ -f "../$SELECTED_PATCH/patch.sh" ]; then
-            echo "--- 正在应用补丁：$SELECTED_PATCH ---"
-            cp -r -f ../$SELECTED_PATCH .
-            chmod +x $SELECTED_PATCH/patch.sh
-            cd $SELECTED_PATCH && ./patch.sh
-            echo "--- 补丁应用成功 ---"
-         else
-            echo "错误: 未找到 $SELECTED_PATCH 补丁目录或脚本！"
-            exit 1
-         fi
+          SELECTED_PATCH="${{ github.event.inputs.patch_type }}"
+          echo "SELECTED_PATCH=$SELECTED_PATCH" >> $GITHUB_ENV
+
+          PATCH_DIR="../scripts/$SELECTED_PATCH"
+
+          if [ -d "$PATCH_DIR" ] && [ -f "$PATCH_DIR/patch.sh" ]; then
+              echo "--- 正在应用补丁：$SELECTED_PATCH ---"
+              cp -r -f "$PATCH_DIR" .
+              chmod +x "$SELECTED_PATCH/patch.sh"
+              cd "$SELECTED_PATCH" && ./patch.sh
+              echo "--- 补丁应用成功 ---"
+          else
+              echo "错误: 未找到 $PATCH_DIR 补丁目录或脚本！"
+              exit 1
+          fi
 
       - name: Free up disk space
         run: |
@@ -167,7 +168,7 @@ jobs:
           ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
           df -H
 
-      - name: Load custom feeds
+      - name: Load custom DIY_P4_SH
         run: |
           [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
           chmod +x $DIY_P4_SH
@@ -245,17 +246,19 @@ jobs:
         if: env.UPLOAD_RELEASE == 'true'
         run: |
           echo "release_tag=$(date +"%Y.%m.%d-%H%M%S")" >> $GITHUB_OUTPUT
-          cat <<EOF > release.txt
-          🚀 XG-040G-MD 固件构建测试
-          ----------------------
-          设备型号: XG-040G-MD
-          构建时间: $(date +"%Y-%m-%d %H:%M")
-          源码仓库: ${{ env.REPO_URL }}
-          分支/Tag: ${{ env.BUILD_REF }}
-          使用补丁: ${{ env.SELECTED_PATCH }}
-          插件: 
-          EOF
-          echo "$(grep -oP "luci-app(-[a-zA-Z0-9]{1,}){1,}" ${{ env.FIRMWARE }}/*.manifest | awk -F":" '{print $NF}')"  >> release.txt
+          echo "🚀 XG-040G-MD Openwrt固件构建" >> release.txt
+          echo "----------------------" >> release.txt
+          echo "设备型号: XG-040G-MD" >> release.txt
+          echo "构建时间: $(date +"%Y-%m-%d %H:%M")" >> release.txt
+          echo "内核版本: $(grep -h "kmod-usb2" ${{ env.FIRMWARE }}/*.manifest 2>/dev/null | awk -F' - ' '{print $2}' | grep -oP '6\.[0-9]+\.[0-9]+' | head -1 || echo '未知')" >> release.txt
+          echo "源码仓库: ${{ env.REPO_URL }}" >> release.txt
+          echo "分支/Tag: ${{ env.BUILD_REF }}" >> release.txt
+          echo "使用补丁: ${{ env.SELECTED_PATCH }}" >> release.txt
+          echo "管理地址: 192.168.6.1" >> release.txt
+          echo "" >> release.txt
+          echo "主要插件" >> release.txt
+          grep -h "luci-app-" ${{ env.FIRMWARE }}/*.manifest 2>/dev/null | awk -F':' '{print $NF}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -oP 'luci-app-[a-zA-Z0-9_-]+' | sort -u | sed 's/^/- /' >> release.txt
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Publish GitHub Release
         uses: ncipollo/release-action@v1
